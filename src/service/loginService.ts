@@ -22,7 +22,7 @@ export default class LoginService extends CommonService {
      *     }
      * @returns Observable<LoginModel>
      */
-    requestLogin (param: {
+    async requestLogin(param: {
         osName: string,
         osVersion: string,
         deviceId: string,
@@ -33,7 +33,17 @@ export default class LoginService extends CommonService {
         pushId: string,
         userId: string,
         password: string
-    }): Observable<LoginModel> {
-        return super.postForm<LoginModel>("mapi/auth/login", param)
+    }): Promise<Observable<LoginModel>> {
+        return await super.postForm<LoginModel>("mapi/auth/login", param)
+    }
+
+    /**
+     * @date 2023-07-24
+     * @author 이승인
+     * @description 유저정보 호출 API
+     * @returns Observable<LoginModel>
+     */
+    async requestUserInfo(): Promise<Observable<LoginModel>> {
+        return await super.post<LoginModel>("mapi/org/getLoggedUserInfo")
     }
 }

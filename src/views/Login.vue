@@ -10,6 +10,7 @@ import {
 } from '@ionic/vue'
 import {onMounted, ref, onBeforeUnmount, nextTick, reactive, computed} from "vue";
 import LoginViewModel from "@/viewModel/loginViewModel";
+import store from "@/store";
 
 const userid = ref()
 const password = ref()

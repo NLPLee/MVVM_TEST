@@ -95,8 +95,28 @@ String.prototype.cardSecured = function() {
     return this.replace(/^(\d{0,4})(\d{0,4})(\d{0,4})(\d{0,4})$/g, "$1-****-****-$4").replace(/\-{1,2}$/g, "")
 }
 
+/**
+ * Sting 빈값 확인
+ */
 String.prototype.isNotVaild = function() {
     return this.trim().length <= 0
 }
+
+/**
+ * 오브젝트 키 null 체크
+ * hasOwnProperty 사용시, 서버의 런타임에러를 유발할 수 있기에, defineProperty 사용
+ */
+Object.defineProperty(Object.prototype, 'objectForKey', {
+    value: function(key: string, defaultValue: any) {
+        if (this && this[key] && this[key] !== null) {
+            return this[key]
+        } else {
+            return defaultValue
+        }
+    },
+    enumerable: false,
+    writable: true,
+    configurable: true
+})
 
 

@@ -1,82 +1,147 @@
-import { catchError, defer, map, Observable, of, ReplaySubject, take } from 'rxjs'
+import {catchError, defer, map, Observable, of, ReplaySubject, take, throwError} from 'rxjs'
 import Axios, { AxiosRequestConfig } from  'axios'
+import Storage from "@/common/storage";
 import Utils from "@/common/util"
+import Global from "@/common/global";
 
 export default class CommonService {
     host?: string = ""
     config: AxiosRequestConfig = {}
 
-    private initializationAxios() {
-        this.setConfig(this.host || "")
+    private async initializationAxios() {
+        await this.setConfig(this.host || "")
         const axiosInstance = Axios.create(this.config);
         return axiosInstance;
     };
 
-    public setConfig(host: string, config: any = "") {
+    public async setConfig(host: string, config: any = "") {
         this.host = host
-        this.config  = {
+        this.config = {
             responseType: 'json',
+            headers: {
+                "Authorization": await Global.accessToken()
+            }
         } as AxiosRequestConfig
 
     }
 
-    protected get<T>(path: string, queryParams?: any): Observable<T> {
+    protected async get<T>(path: string, queryParams?: any): Promise<Observable<T>> {
         const requestURL = this.settingURL(this.host, path)
         Utils.console(`GET: ${requestURL}`)
         Utils.console(`Query: ${JSON.stringify(queryParams, null, 2)}`)
-        const axiosInstance = this.initializationAxios()
-        return defer(()=>
-            axiosInstance.get<T>(requestURL, {params: queryParams}))
-            .pipe(map(result => result.data)
-            )
-    }
-
-    protected post<T>(path: string, params?: object): Observable<T> {
-        const requestURL = this.settingURL(this.host, path)
-        Utils.console(`POST: ${requestURL}`)
-        Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
-        const axiosInstance = this.initializationAxios()
-        return defer(()=>
-            axiosInstance.post<T>(requestURL, params))
-            .pipe(map(result => {
-                Utils.console(`Response: ${result.data}`)
+        const axiosInstance = await this.initializationAxios()
+        return defer(() =>
+          axiosInstance.get<T>(requestURL, {params: queryParams}))
+          .pipe(
+            map(result => {
+                Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
                 return result.data
-            } ))
+            }),
+            catchError(error => {
+                if (error.response && error.response.status === 403) {
+                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
+                    return of(error.message)
+                }
+                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
+                return of(error.message)
+            })
+          )
     }
 
-    protected postForm<T>(path: string, params?: object): Observable<T> {
-        const requestURL = this.settingURL(this.host, path)
-        Utils.console(`POST(Form): ${requestURL}`)
-        Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
-        const axiosInstance = this.initializationAxios()
-        return defer(()=>
-          axiosInstance.postForm<T>(requestURL, params))
-          .pipe(map(result => {
-              Utils.console(`Response: ${result}`)
+    protected async post<T>(path: string, params?: object): Promise<Observable<any>> {
+        const requestURL = this.settingURL(this.host, path);
+        const axiosInstance = await this.initializationAxios();
+        Utils.console(`POST: ${requestURL}`);
+        Utils.console(`Header: ${JSON.stringify(this.config.headers, null, 2)}`);
+        Utils.console(`Params: ${JSON.stringify(params, null, 2)}`);
+
+        return defer(() =>
+          axiosInstance.post<T>(requestURL, params)
+        ).pipe(
+          map(result => {
+              Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
               return result.data
-          } ))
+          }),
+          catchError(error => {
+              if (error.response && error.response.status === 403) {
+                  Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
+                  return of(error.message)
+              }
+              Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
+              return of(error.message)
+          })
+        )
     }
 
+    protected async postForm<T>(path: string, params?: object): Promise<Observable<T>> {
+        const requestURL = this.settingURL(this.host, path)
 
-    protected put<T>(path: string, params?: object): Observable<T> {
+        const axiosInstance = await this.initializationAxios()
+        Utils.console(`POST(Form): ${requestURL}`)
+        Utils.console(`Header: ${JSON.stringify(this.config.headers, null, 2)}`)
+        Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
+        return defer(() =>
+          axiosInstance.postForm<T>(requestURL, params))
+          .pipe(
+            map(result => {
+                Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
+                return result.data
+            }),
+            catchError(error => {
+                if (error.response && error.response.status === 403) {
+                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
+                    return of(error.message)
+                }
+                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
+                return of(error.message)
+            })
+          )
+    }
+
+    protected async put<T>(path: string, params?: object): Promise<Observable<T>> {
         const requestURL = this.settingURL(this.host, path)
         Utils.console(`PUT: ${requestURL}`)
         Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
-        const axiosInstance = this.initializationAxios()
-        return defer(()=>
-            axiosInstance.put<T>(requestURL, params))
-            .pipe(map(result => result.data))
+        const axiosInstance = await this.initializationAxios()
+        return defer(() =>
+          axiosInstance.put<T>(requestURL, params))
+          .pipe(
+            map(result => {
+                Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
+                return result.data
+            }),
+            catchError(error => {
+                if (error.response && error.response.status === 403) {
+                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
+                    return of(error.message)
+                }
+                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
+                return of(error.message)
+            })
+          )
     }
 
-    protected delete<T>(path: string, params?: object): Observable<T> {
+    protected async delete<T>(path: string, params?: object): Promise<Observable<T>> {
         const requestURL = this.settingURL(this.host, path)
         Utils.console(`delete: ${requestURL}`)
         Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
-        const axiosInstance = this.initializationAxios()
-        return defer(()=>
-            axiosInstance.delete<T>(requestURL, params))
-            .pipe(map(result => result.data)
-            )
+        const axiosInstance = await this.initializationAxios()
+        return defer(() =>
+          axiosInstance.delete<T>(requestURL, params))
+          .pipe(
+            map(result => {
+                Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
+                return result.data
+            }),
+            catchError(error => {
+                if (error.response && error.response.status === 403) {
+                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
+                    return of(error.message)
+                }
+                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
+                return of(error.message)
+            })
+          )
     }
 
     private settingURL(host?: string, path?: string): string {

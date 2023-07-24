@@ -1,26 +1,26 @@
 import { InjectionKey } from "vue"
 import { createStore, useStore as baseUseStore, Store } from "vuex"
+import LoginModel from "@/model/loginModel";
 
 export interface State {
-    init: any
+    user: any
 }
 
 export const key: InjectionKey<Store<State>> = Symbol();
 export default createStore<State>({
     state() {
         return {
-            init: []
+            user: LoginModel
         };
     },
     mutations: {
-        init(state, index) {
-
-            state.init = index
+        settingUser(state, data: LoginModel) {
+            state.user = data
         }
     },
     actions: {
-        init(context, data: number) {
-            return context.commit("init", data)
+        settingUser(context, data: number) {
+            return context.commit("settingUser", data)
         }
     }
 
