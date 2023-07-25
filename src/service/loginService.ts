@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 import CommonService from "@/common/service"
 import LoginModel from "@/model/loginModel";
+import Result from "@/common/result";
 
 export default class LoginService extends CommonService {
 
@@ -33,8 +34,8 @@ export default class LoginService extends CommonService {
         pushId: string,
         userId: string,
         password: string
-    }): Promise<Observable<LoginModel>> {
-        return await super.postForm<LoginModel>("mapi/auth/login", param)
+    }): Promise<Observable<any>> {
+        return await super.postForm<any>("mapi/auth/login", param)
     }
 
     /**
@@ -43,7 +44,7 @@ export default class LoginService extends CommonService {
      * @description 유저정보 호출 API
      * @returns Observable<LoginModel>
      */
-    async requestUserInfo(): Promise<Observable<LoginModel>> {
-        return await super.post<LoginModel>("mapi/org/getLoggedUserInfo")
+    async requestUserInfo(): Promise<Observable<any>> {
+        return await super.post<any>("mapi/org/getLoggedUserInfo")
     }
 }

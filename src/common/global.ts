@@ -24,7 +24,10 @@ class GlobalData {
 
   setAccessToken(token: string) {
     const key = this.accessTokenKey
-    Storage.set(key, `Bearer ${token}`)
+    if(token.length > 0) {
+      Storage.set(key, `Bearer ${token}`)
+    }
+
   }
 }
 

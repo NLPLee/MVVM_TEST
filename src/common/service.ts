@@ -1,8 +1,8 @@
-import {catchError, defer, map, Observable, of, ReplaySubject, take, throwError} from 'rxjs'
+import {catchError, defer, map, Observable, of, refCount, ReplaySubject, shareReplay, take, throwError, EMPTY} from 'rxjs'
 import Axios, { AxiosRequestConfig } from  'axios'
-import Storage from "@/common/storage";
 import Utils from "@/common/util"
 import Global from "@/common/global";
+import Result, {Code} from "@/common/result";
 
 export default class CommonService {
     host?: string = ""
@@ -40,12 +40,25 @@ export default class CommonService {
             catchError(error => {
                 if (error.response && error.response.status === 403) {
                     Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
-                    return of(error.message)
+                    return throwError(error.message)
                 }
                 Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
-                return of(error.message)
-            })
+                return throwError(error.message)
+            }),
+            shareReplay(1)
           )
+    }
+
+    a(b: any) {
+        b.pipe(
+          map(result => {
+              Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
+              return new Result(Code.SUCCESS, result.data)
+          }),
+          catchError(error => {
+              return of(new Result(Code.FAIL, null, error))
+          })
+        )
     }
 
     protected async post<T>(path: string, params?: object): Promise<Observable<any>> {
@@ -60,20 +73,15 @@ export default class CommonService {
         ).pipe(
           map(result => {
               Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
-              return result.data
+              return new Result(Code.SUCCESS, result.data)
           }),
           catchError(error => {
-              if (error.response && error.response.status === 403) {
-                  Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
-                  return of(error.message)
-              }
-              Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
-              return of(error.message)
+              return of(new Result(Code.FAIL, null, error))
           })
         )
     }
 
-    protected async postForm<T>(path: string, params?: object): Promise<Observable<T>> {
+    protected async postForm<T>(path: string, params?: object): Promise<Observable<any>>  {
         const requestURL = this.settingURL(this.host, path)
 
         const axiosInstance = await this.initializationAxios()
@@ -85,20 +93,15 @@ export default class CommonService {
           .pipe(
             map(result => {
                 Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
-                return result.data
+                return new Result(Code.SUCCESS, result.data)
             }),
             catchError(error => {
-                if (error.response && error.response.status === 403) {
-                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
-                    return of(error.message)
-                }
-                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
-                return of(error.message)
+                return of(new Result(Code.FAIL, null, error))
             })
           )
     }
 
-    protected async put<T>(path: string, params?: object): Promise<Observable<T>> {
+    protected async put<T>(path: string, params?: object): Promise<Observable<any>> {
         const requestURL = this.settingURL(this.host, path)
         Utils.console(`PUT: ${requestURL}`)
         Utils.console(`Params: ${JSON.stringify(params, null, 2)}`)
@@ -108,15 +111,10 @@ export default class CommonService {
           .pipe(
             map(result => {
                 Utils.console(`Response: ${JSON.stringify(result, null, 2)}`);
-                return result.data
+                return new Result(Code.SUCCESS, result.data)
             }),
             catchError(error => {
-                if (error.response && error.response.status === 403) {
-                    Utils.console(`Error 403 Response: ${JSON.stringify(error.message, null, 2)}`);
-                    return of(error.message)
-                }
-                Utils.console(`Error Response: ${JSON.stringify(error.message, null, 2)}`);
-                return of(error.message)
+                return of(new Result(Code.FAIL, null, error))
             })
           )
     }
